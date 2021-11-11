@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+  namespace: default
+  labels:
+    app: notifications
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: notifications
+  template:
+    metadata:
+      labels:
+        pod: notifications
+    spec:
+      containers:
+        - name: notifications
+          image: "{{ .Values.image.repository}}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 2500
+          resources: { }
+          env:
+            - name: CELERY_BROKER_URL
+              value: amqp://guest:guest@rabbitmq-1.rabbitmq.default.svc.cluster.local:5672/
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: password
+            - name: POSTGRES_DB
+              value: eduonedbnotifications
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres.acid-minimal-cluster-notifications.credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres.acid-minimal-cluster-notifications.credentials
+                  key: password
+
+            - name: POSTGRES_PORT
+              value: "5432"
+
+            - name: POSTGRES_HOST
+              value: acid-minimal-cluster-notifications
+
+            - name: DB_ENGINE
+              value: postgresql+asyncpg
+
+            - name: ELASTIC_HOST
+              value: elasticsearch.kube-logging
+
+      imagePullSecrets:
+        - name: gitlab-regcred
+
+      restartPolicy: Always

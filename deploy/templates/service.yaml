@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: notifications-service
+  namespace: default
+spec:
+  selector:
+    pod: notifications
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 2500
+    targetPort: 2500
+    nodePort: 30013
